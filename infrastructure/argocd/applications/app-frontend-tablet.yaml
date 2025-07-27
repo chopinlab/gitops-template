@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wheelloader-frontend-tablet-dev
+  namespace: argocd
+spec:
+  project: wheelloader
+  source:
+    repoURL: https://github.com/your-org/your-gitops-repo.git
+    targetRevision: main
+    path: projects/wheelloader-frontend-tablet/kubernetes/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wheelloader
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true 

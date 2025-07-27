@@ -1,0 +1,44 @@
+name: Validate Kubernetes Manifests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'projects/*/kubernetes/**/*.yaml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'projects/*/kubernetes/**/*.yaml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          version: 'latest'
+          
+      - name: Install kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+          
+      - name: Validate Kubernetes manifests
+        run: |
+          echo "Validating Kubernetes manifests..."
+          find projects -path "*/kubernetes/**/*.yaml" -type f -not -path "*/overlays/*" | while read manifest; do
+            echo "Validating $manifest"
+            kubectl apply --dry-run=client -f $manifest
+          done
+          
+      - name: Validate Kustomize builds
+        run: |
+          echo "Validating Kustomize builds..."
+          find projects -path "*/kubernetes/*/kustomization.yaml" -type f | while read kustomization; do
+            dir=$(dirname $kustomization)
+            echo "Building kustomization in $dir"
+            kustomize build $dir > /dev/null
+          done 

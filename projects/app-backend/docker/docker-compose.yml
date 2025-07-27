@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  core-server:
+    image: clobot/core-server:${TAG:-latest}
+    container_name: core-server
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - ENV=${ENV:-development}
+    volumes:
+      - core-server-data:/app/data
+    networks:
+      - clobot-network
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - clobot-network
+
+volumes:
+  core-server-data:
+  postgres-data:
+
+networks:
+  clobot-network:
+    driver: bridge 

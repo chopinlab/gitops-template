@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core-server
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: core-server
+        image: clobot/core-server:stable
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+        env:
+        - name: LOG_LEVEL
+          value: "warn"
+        - name: ENV
+          value: "production" 

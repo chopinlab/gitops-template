@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-tablet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-tablet
+  template:
+    spec:
+      containers:
+      - name: frontend-tablet
+        image: harbor.clobotspot.com/wheelloader/frontend-tablet:latest
+        resources:
+          limits:
+            cpu: "1"  # 0.5 CPU cores
+            memory: "1024Mi"  # 512 MiB memory
+          requests:
+            cpu: "0.2"  # 0.2 CPU cores requested
+            memory: "512Mi"  # 256 MiB memory requested
+
+
+
+
+
+

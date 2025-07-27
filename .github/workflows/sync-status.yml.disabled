@@ -1,0 +1,59 @@
+name: Check Deployment Sync Status
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Run every 6 hours
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  check-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          version: 'latest'
+          
+      - name: Set up kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+          export KUBECONFIG=kubeconfig.yaml
+          
+      - name: Check deployment status
+        run: |
+          echo "Checking deployment sync status..."
+          
+          # Check dev environment
+          echo "Checking dev environment..."
+          kubectl config use-context dev-cluster
+          
+          # Loop through projects in dev environment
+          cat environments/dev/projects.yaml | while read project; do
+            echo "Checking $project in dev environment"
+            kubectl get deployment -n $project -o wide
+          done
+          
+          # Check prod environment
+          echo "Checking prod environment..."
+          kubectl config use-context prod-cluster
+          
+          # Loop through projects in prod environment
+          cat environments/prod/projects.yaml | while read project; do
+            echo "Checking $project in prod environment"
+            kubectl get deployment -n $project -o wide
+          done
+          
+      - name: Notify if out of sync
+        if: failure()
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Deployment out of sync detected',
+              body: 'The deployment sync check has detected that some deployments are out of sync with the GitOps repository. Please check the workflow logs for details.'
+            }) 

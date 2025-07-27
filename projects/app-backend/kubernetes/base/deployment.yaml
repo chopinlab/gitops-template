@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core-server
+  template:
+    metadata:
+      labels:
+        app: core-server
+    spec:
+      containers:
+      - name: core-server
+        image: harbor.clobotspot.com/wheelloader/core-server:latest
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: "6"  # 0.5 CPU cores
+            memory: "8196Mi"  # 512 MiB memory
+          requests:
+            cpu: "4"  # 0.2 CPU cores requested
+            memory: "4096Mi"  # 256 MiB memory requested
+        ports:
+        - containerPort: 6010
+        - containerPort: 6030
+        envFrom:
+        - configMapRef:
+            name: wheelloader-cm
+        env:
+        - name: REST_SERVER_HOST
+          value: ""
+        - name: REST_SERVER_PORT
+          value: "6010"
+        - name: GRPC_SERVER_HOST
+          value: ""
+        - name: GRPC_SERVER_PORT
+          value: "26030"
+        - name: APP_ENV
+          value: "dev"
+        - name: ROS_SERVER_ENABLE
+          value: "false"
+        - name: ROS_MOCK_DATA_ENABLE
+          value: "true"
+        - name: ROS_SERVER_HOST
+          value: "172.20.1.235"
+        - name: ROS_SERVER_PORT
+          value: "8000"
+        - name: JWT_SECRET_KEY_ACCESS_EXPIRE_MINUTES_COUNT
+          value: "15"
+        - name: JWT_SECRET_KEY_REFRESH_EXPIRE_MINUTES_COUNT
+          value: "1440"
+
+
+        # - name: MONITOR_CONNECTION_CHECK_INTERVAL
+        #   value: "20"
+        # - name: MONITOR_PERIODIC_INTERVAL
+        #   value: "20"
+        # - name: MONITOR_MOTION_INTERVAL
+        #   value: "20"
+        # - name: MONITOR_MISSION_INTERVAL
+        #   value: "20"
+        # - name: MONITOR_GPS_INTERVAL
+        #   value: "10"
+
+
+
+
+        - name: MONITOR_MISSION_ENABLE
+          value: "true"
+
+
+
+        - name: MONITOR_CONNECTION_CHECK_INTERVAL_MILLISECONDS
+          value: "10000"
+        - name: MONITOR_PERIODIC_INTERVAL_MILLISECONDS
+          value: "2000"
+        - name: MONITOR_MOTION_INTERVAL_MILLISECONDS
+          value: "2000"
+        - name: MONITOR_MISSION_INTERVAL_MILLISECONDS
+          value: "5000"
+        - name: MONITOR_GPS_INTERVAL_MILLISECONDS
+          value: "2000"
+        - name: MONITOR_FULL_STATUS_SENDER_INTERVAL_MILLISECONDS
+          value: "30000"
+        
+
+ 
+
+
+      imagePullSecrets:
+        - name: si-registry-cred

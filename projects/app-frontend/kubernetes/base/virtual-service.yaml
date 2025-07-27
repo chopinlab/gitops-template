@@ -1,0 +1,96 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: wheelloader-vs
+spec:
+  hosts:
+  - "wheelloader.clobotspot.com"
+  gateways:
+  - istio-system/istio-gateway
+  http:
+    - match:
+      - port: 80
+        uri:
+          prefix: /api/v1
+      route:
+        - destination:
+            host: core-server-svc.wheelloader.svc.cluster.local
+            port:
+              number: 6010
+    - match:
+      - port: 80
+        uri:
+          prefix: /ws
+      route:
+        - destination:
+            host: core-server-svc.wheelloader.svc.cluster.local
+            port:
+              number: 6010
+    # - match:
+    #   - port: 80
+    #     uri:
+    #       prefix: /potree-map
+    #   rewrite:
+    #     uri: /  # /potree 경로를 /로 rewrite    
+    #   route:
+    #     - destination:
+    #         host: frontend-svc.wheelloader.svc.cluster.local
+    #         port:
+    #           number: 1234
+    - match:
+      - port: 80
+        uri:
+          prefix: /resources
+      route:
+        - destination:
+            host: frontend-svc.wheelloader.svc.cluster.local
+            port:
+              number: 1234
+    - match:
+      - port: 80
+        uri:
+          prefix: /wheelloader/
+      route:
+        - destination:
+            host: minio-lb.minio.svc.cluster.local
+            port:
+              number: 9000
+    - match:
+      - port: 80
+        uri:
+          prefix: /libs
+      route:
+        - destination:
+            host: frontend-svc.wheelloader.svc.cluster.local
+            port:
+              number: 1234
+    - match:
+      - port: 80
+        uri:
+          prefix: /build
+      route:
+        - destination:
+            host: frontend-svc.wheelloader.svc.cluster.local
+            port:
+              number: 1234
+    - match:
+      - port: 26030
+      route:
+        - destination:
+            host: core-server-svc.wheelloader.svc.cluster.local
+            port:
+              number: 26030
+    - match:
+      - port: 26010
+      route:
+        - destination:
+            host: core-server-svc.wheelloader.svc.cluster.local
+            port:
+              number: 6010
+
+    # default routing (wheelloader frontend)
+    - route:
+      - destination:
+          host: frontend-svc.wheelloader.svc.cluster.local
+          port:
+            number: 80

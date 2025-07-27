@@ -1,0 +1,180 @@
+services:
+
+  traefik:
+    image: traefik:v3.3.4
+    container_name: wheelloader-traefik
+    command:
+      - "--api.insecure=true"  # 개발 환경용, 프로덕션에서는 false로 설정
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.frontend-tablet.address=:3000"  # frontend-tablet 전용 포트
+      - "--entrypoints.frontend-tablet.http.tls=true"  # TLS 활성화
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # 대시보드 포트
+      - "3000:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # - ./traefik/acme.json:/acme.json
+    networks:
+      - wheelloader-network
+
+
+
+  frontend:
+    image: harbor.clobotspot.com/wheelloader/frontend:193e1cc5
+    container_name: wheelloader-frontend
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.priority=-1"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend.tls=true"  # TLS 활성화
+    environment:
+      - APP_ENV=prod
+
+    networks:
+      - wheelloader-network
+
+
+  frontend-tablet:
+    image: harbor.clobotspot.com/wheelloader/frontend-tablet:10c735c4
+    container_name: wheelloader-frontend-tablet
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-tablet.rule=PathPrefix(`/`)"
+        #- "traefik.http.routers.frontend-tablet.entrypoints=websecure"
+      - "traefik.http.routers.frontend-tablet.entrypoints=frontend-tablet"
+      - "traefik.http.services.frontend-tablet.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend-tablet.tls=true"  # TLS 활성화
+      # CORS 미들웨어 설정 추가
+      - "traefik.http.middlewares.frontend-tablet-cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.frontend-tablet-cors.headers.accesscontrolallowheaders=Content-Type,Authorization"
+      - "traefik.http.middlewares.frontend-tablet-cors.headers.accesscontrolalloworiginlist=https://172.20.1.149:3000"
+      - "traefik.http.middlewares.frontend-tablet-cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.frontend-tablet-cors.headers.addvaryheader=true"
+      # 라우터에 미들웨어 적용
+      - "traefik.http.routers.frontend-tablet.middlewares=frontend-tablet-cors"
+    environment:
+      - APP_ENV=prod
+
+    networks:
+      - wheelloader-network
+
+
+
+  core-server:
+    image: harbor.clobotspot.com/wheelloader/core-server:5855477
+    container_name: wheelloader-backend
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.core-api.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.core-api.entrypoints=websecure"
+      - "traefik.http.services.core-api.loadbalancer.server.port=6010"
+      - "traefik.http.routers.core-api.tls=true"  # TLS 설정 추가
+      - "traefik.http.routers.core-api.service=core-api"
+       # CORS 미들웨어 설정 추가
+      - "traefik.http.middlewares.core-api-cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.core-api-cors.headers.accesscontrolallowheaders=Content-Type,Authorization"
+      - "traefik.http.middlewares.core-api-cors.headers.accesscontrolalloworiginlist=https://172.20.1.149:3000"
+      - "traefik.http.middlewares.core-api-cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.core-api-cors.headers.addvaryheader=true"
+      # 라우터에 미들웨어 적용
+      - "traefik.http.routers.core-api.middlewares=core-api-cors"
+
+      # WebSocket 라우팅
+      - "traefik.http.routers.core-ws.rule=PathPrefix(`/ws`)"
+      - "traefik.http.routers.core-ws.entrypoints=websecure"
+      - "traefik.http.services.core-ws.loadbalancer.server.port=6010"
+      - "traefik.http.routers.core-ws.tls=true"  # TLS 설정 추가
+      - "traefik.http.routers.core-ws.service=core-ws"
+      # WebSocket CORS 미들웨어 적용
+      - "traefik.http.routers.core-ws.middlewares=core-api-cors"
+    environment:
+      - APP_ENV=prod
+      - ROS_SERVER_ENABLE=true
+      - ROS_MOCK_DATA_ENABLE=false
+      - ROS_SERVER_HOST=172.18.0.1
+      - ROS_SERVER_PORT=8000
+      - MONITOR_CONNECTION_CHECK_INTERVAL=20
+      - MONITOR_PERIODIC_INTERVAL=20
+      - MONITOR_MOTION_INTERVAL=20
+      - MONITOR_MISSION_INTERVAL=20
+      - MONITOR_GPS_INTERVAL=10
+
+    networks:
+      - wheelloader-network
+
+  postgres:
+    image: postgis/postgis:17-3.5-alpine
+    container_name: wheelloader-postgres
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # - ./initdb:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_DB: taskmanager
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: clientadmin123
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      POSTGRES_INIT_SQL: "CREATE EXTENSION IF NOT EXISTS postgis;"
+    networks:
+      - wheelloader-network
+
+  minio:
+    image: minio/minio:RELEASE.2025-03-12T18-04-18Z
+    container_name: wheelloader-minio
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=PathPrefix(`/wheelloader/`)"
+      - "traefik.http.routers.minio.entrypoints=websecure"
+      - "traefik.http.routers.minio.tls=true"  # TLS 설정 추가
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
+    ports:
+      - "9001:9001" # MinIO 관리 콘솔 포트
+    volumes:
+      - minio_data:/data
+    command: minio server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: clientadmin123
+    networks:
+      - wheelloader-network
+
+  mongo:
+    image: mongo:8
+    container_name: wheelloader-mongo
+    restart: always
+    ports:
+      - "27017:27017" # MongoDB 포트
+    volumes:
+      - mongo_data:/data
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: clientadmin123
+    networks:
+      - wheelloader-network
+
+volumes:
+  postgres-data:
+    driver: local
+  minio_data:
+    driver: local
+  mongo_data:
+    driver: local
+
+networks:
+  wheelloader-network:
+    driver: bridge
