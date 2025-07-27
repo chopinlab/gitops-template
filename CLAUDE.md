@@ -72,6 +72,6 @@ kubectl apply -k projects/app-backend/kubernetes/overlays/prod/
 ## Git Commit Guidelines
 - When creating commits, remove any Anthropic/Claude attribution footers or co-author information
 - Keep commit messages clean and focused on the actual changes
-- Write commit messages in Korean for better team communication
-- Follow conventional commit format when possible
+- Use Korean conventional commit format: "기능: description" (feat), "버그: description" (fix), "문서: description" (docs), etc.
+- Follow conventional commit format with Korean prefixes for better team communication
 - Reference the updated README.md for project-specific guidelines and setup instructions
