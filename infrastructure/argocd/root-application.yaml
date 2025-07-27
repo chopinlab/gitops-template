@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/CLOBOT-NTDev/clobot-gitops.git
+    repoURL: https://github.com/your-org/your-gitops-repo.git
     targetRevision: main
     path: infrastructure/argocd/applications
   destination:

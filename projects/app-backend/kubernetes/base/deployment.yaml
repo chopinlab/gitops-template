@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: core-server
-        image: harbor.clobotspot.com/wheelloader/core-server:latest
+        image: registry.example.com/app/backend:latest
         imagePullPolicy: Always
         resources:
           limits:
@@ -28,7 +28,7 @@ spec:
         - containerPort: 6030
         envFrom:
         - configMapRef:
-            name: wheelloader-cm
+            name: app-cm
         env:
         - name: REST_SERVER_HOST
           value: ""

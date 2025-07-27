@@ -1,10 +1,10 @@
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
-  name: wheelloader-tablet-vs
+  name: app-tablet-vs
 spec:
   hosts:
-  - "wheelloader-tablet.clobotspot.com"
+  - "app-tablet.example.com"
   gateways:
   - istio-system/istio-gateway
   http:
@@ -14,7 +14,7 @@ spec:
           prefix: /api/v1
       route:
         - destination:
-            host: core-server-svc.wheelloader.svc.cluster.local
+            host: core-server-svc.app.svc.cluster.local
             port:
               number: 6010
     - match:
@@ -23,7 +23,7 @@ spec:
           prefix: /ws
       route:
         - destination:
-            host: core-server-svc.wheelloader.svc.cluster.local
+            host: core-server-svc.app.svc.cluster.local
             port:
               number: 6010
     # - match:
@@ -34,7 +34,7 @@ spec:
     #     uri: /  # /potree 경로를 /로 rewrite    
     #   route:
     #     - destination:
-    #         host: frontend-svc.wheelloader.svc.cluster.local
+    #         host: frontend-svc.app.svc.cluster.local
     #         port:
     #           number: 1234
     - match:
@@ -43,7 +43,7 @@ spec:
           prefix: /resources
       route:
         - destination:
-            host: frontend-tablet-svc.wheelloader.svc.cluster.local
+            host: frontend-tablet-svc.app.svc.cluster.local
             port:
               number: 1234
     - match:
@@ -52,7 +52,7 @@ spec:
           prefix: /libs
       route:
         - destination:
-            host: frontend-tablet-svc.wheelloader.svc.cluster.local
+            host: frontend-tablet-svc.app.svc.cluster.local
             port:
               number: 1234
     - match:
@@ -61,27 +61,27 @@ spec:
           prefix: /build
       route:
         - destination:
-            host: frontend-tablet-svc.wheelloader.svc.cluster.local
+            host: frontend-tablet-svc.app.svc.cluster.local
             port:
               number: 1234
     - match:
       - port: 26030
       route:
         - destination:
-            host: core-server-svc.wheelloader.svc.cluster.local
+            host: core-server-svc.app.svc.cluster.local
             port:
               number: 26030
     - match:
       - port: 26010
       route:
         - destination:
-            host: core-server-svc.wheelloader.svc.cluster.local
+            host: core-server-svc.app.svc.cluster.local
             port:
               number: 6010
 
-    # default routing (wheelloader frontend)
+    # default routing (app frontend)
     - route:
       - destination:
-          host: frontend-tablet-svc.wheelloader.svc.cluster.local
+          host: frontend-tablet-svc.app.svc.cluster.local
           port:
             number: 80

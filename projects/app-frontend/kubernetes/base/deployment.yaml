@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: harbor.clobotspot.com/wheelloader/frontend:latest
+        image: registry.example.com/app/frontend:latest
         imagePullPolicy: Always
         ports:
           - containerPort: 80

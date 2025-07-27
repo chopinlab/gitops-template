@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: wheelloader-frontend-dev
+  name: app-frontend-dev
   namespace: argocd
 spec:
-  project: wheelloader
+  project: default
   source:
     repoURL: https://github.com/your-org/your-gitops-repo.git
     targetRevision: main
-    path: projects/wheelloader-frontend/kubernetes/overlays/dev
+    path: projects/app-frontend/kubernetes/overlays/dev
   destination:
     server: https://kubernetes.default.svc
-    namespace: wheelloader
+    namespace: app
   syncPolicy:
     automated:
       prune: true

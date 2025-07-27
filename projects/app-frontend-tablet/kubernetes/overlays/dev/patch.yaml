@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: frontend-tablet
-        image: harbor.clobotspot.com/wheelloader/frontend-tablet:latest
+        image: registry.example.com/app/frontend-tablet:latest
         resources:
           limits:
             cpu: "1"  # 0.5 CPU cores

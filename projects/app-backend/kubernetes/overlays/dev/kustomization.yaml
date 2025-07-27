@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
 - ../../base
 
-namespace: wheelloader
+namespace: app
 
 patchesStrategicMerge:
 - patch.yaml
@@ -12,5 +12,5 @@ patchesStrategicMerge:
 commonLabels:
   environment: dev
 images:
-- name: harbor.clobotspot.com/wheelloader/core-server
+- name: registry.example.com/app/backend
   newTag: 85ec18b

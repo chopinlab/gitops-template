@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: core-server
-        image: harbor.clobotspot.com/wheelloader/core-server:latest
+        image: registry.example.com/app/backend:latest
         resources:
           limits:
             cpu: "6"  # 0.5 CPU cores

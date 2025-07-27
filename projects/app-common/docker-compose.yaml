@@ -2,7 +2,7 @@ services:
 
   traefik:
     image: traefik:v3.3.4
-    container_name: wheelloader-traefik
+    container_name: app-traefik
     command:
       - "--api.insecure=true"  # 개발 환경용, 프로덕션에서는 false로 설정
       - "--providers.docker=true"
@@ -22,13 +22,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # - ./traefik/acme.json:/acme.json
     networks:
-      - wheelloader-network
+      - app-network
 
 
 
   frontend:
-    image: harbor.clobotspot.com/wheelloader/frontend:193e1cc5
-    container_name: wheelloader-frontend
+    image: registry.example.com/app/frontend:193e1cc5
+    container_name: app-frontend
     restart: always
     labels:
       - "traefik.enable=true"
@@ -41,12 +41,12 @@ services:
       - APP_ENV=prod
 
     networks:
-      - wheelloader-network
+      - app-network
 
 
   frontend-tablet:
-    image: harbor.clobotspot.com/wheelloader/frontend-tablet:10c735c4
-    container_name: wheelloader-frontend-tablet
+    image: registry.example.com/app/frontend-tablet:10c735c4
+    container_name: app-frontend-tablet
     restart: always
     labels:
       - "traefik.enable=true"
@@ -67,13 +67,13 @@ services:
       - APP_ENV=prod
 
     networks:
-      - wheelloader-network
+      - app-network
 
 
 
   core-server:
-    image: harbor.clobotspot.com/wheelloader/core-server:5855477
-    container_name: wheelloader-backend
+    image: registry.example.com/app/backend:5855477
+    container_name: app-backend
     restart: always
     labels:
       - "traefik.enable=true"
@@ -112,11 +112,11 @@ services:
       - MONITOR_GPS_INTERVAL=10
 
     networks:
-      - wheelloader-network
+      - app-network
 
   postgres:
     image: postgis/postgis:17-3.5-alpine
-    container_name: wheelloader-postgres
+    container_name: app-postgres
     ports:
       - "5432:5432"
     restart: always
@@ -130,15 +130,15 @@ services:
       POSTGRES_INITDB_ARGS: "--data-checksums"
       POSTGRES_INIT_SQL: "CREATE EXTENSION IF NOT EXISTS postgis;"
     networks:
-      - wheelloader-network
+      - app-network
 
   minio:
     image: minio/minio:RELEASE.2025-03-12T18-04-18Z
-    container_name: wheelloader-minio
+    container_name: app-minio
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minio.rule=PathPrefix(`/wheelloader/`)"
+      - "traefik.http.routers.minio.rule=PathPrefix(`/app/`)"
       - "traefik.http.routers.minio.entrypoints=websecure"
       - "traefik.http.routers.minio.tls=true"  # TLS 설정 추가
       - "traefik.http.services.minio.loadbalancer.server.port=9000"
@@ -151,11 +151,11 @@ services:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: clientadmin123
     networks:
-      - wheelloader-network
+      - app-network
 
   mongo:
     image: mongo:8
-    container_name: wheelloader-mongo
+    container_name: app-mongo
     restart: always
     ports:
       - "27017:27017" # MongoDB 포트
@@ -165,7 +165,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: clientadmin123
     networks:
-      - wheelloader-network
+      - app-network
 
 volumes:
   postgres-data:
@@ -176,5 +176,5 @@ volumes:
     driver: local
 
 networks:
-  wheelloader-network:
+  app-network:
     driver: bridge
