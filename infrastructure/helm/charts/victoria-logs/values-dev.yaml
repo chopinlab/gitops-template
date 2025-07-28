@@ -1,0 +1,61 @@
+# VictoriaLogs - Loki 대체 (경량화)
+# 차트: vm/victoria-logs-single
+
+victoria-logs-single:
+  server:
+    # 스토리지 설정
+    persistentVolume:
+      enabled: true
+      size: 20Gi
+      storageClass: ""  # 기본 스토리지 클래스 사용
+      
+    # 리소스 제한
+    resources:
+      requests:
+        memory: "200Mi"
+        cpu: "100m"
+      limits:
+        memory: "500Mi" 
+        cpu: "500m"
+    
+    # 보존 기간 설정
+    retentionPeriod: "7d"
+    
+    # 서비스 설정 (externalIPs 사용)
+    service:
+      type: ClusterIP
+      port: 9428
+      externalIPs:
+        - ${EXTERNAL_IP}  # 실제 서버 IP로 변경 필요
+      
+    # Ingress 설정 (필요시 활성화)
+    ingress:
+      enabled: false
+      # enabled: true
+      # hosts:
+      #   - host: victoria-logs.local
+      #     paths:
+      #       - path: /
+      #         pathType: Prefix
+      
+    # 환경변수
+    env:
+      - name: VL_httpListenAddr
+        value: ":9428"
+      - name: VL_logLevel
+        value: "INFO"
+        
+  # Fluent Bit 설정 (로그 수집기)
+  fluent-bit:
+    enabled: true
+    config:
+      outputs: |
+        [OUTPUT]
+            Name http
+            Match *
+            Host victoria-logs-single
+            Port 9428
+            URI /insert/jsonline
+            Format json_lines
+            Json_date_key _time
+            Json_date_format iso8601

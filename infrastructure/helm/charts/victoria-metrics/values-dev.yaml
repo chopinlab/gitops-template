@@ -1,0 +1,47 @@
+# VictoriaMetrics Single - Prometheus 대체 (경량화)
+# 차트: vm/victoria-metrics-single
+
+# 리소스 설정
+server:
+  # 스토리지 설정
+  persistentVolume:
+    enabled: true
+    size: 20Gi
+    storageClass: ""  # 기본 스토리지 클래스 사용
+    
+  # 리소스 제한
+  resources:
+    requests:
+      memory: "200Mi"
+      cpu: "100m"
+    limits:
+      memory: "500Mi"
+      cpu: "500m"
+  
+  # 보존 기간 설정
+  retentionPeriod: "30d"
+  
+  # 서비스 설정 (externalIPs 사용)
+  service:
+    type: ClusterIP
+    clusterIP: ""
+    port: 8428
+    externalIPs:
+      - 192.168.0.10  # 실제 서버 IP로 변경 필요
+    
+  # Ingress 설정 (필요시 활성화)
+  ingress:
+    enabled: false
+    # enabled: true
+    # hosts:
+    #   - host: victoria-metrics.local
+    #     paths:
+    #       - path: /
+    #         pathType: Prefix
+    
+  # 환경변수
+  env:
+    - name: VM_httpListenAddr
+      value: ":8428"
+    - name: VM_logLevel
+      value: "INFO"

@@ -1,0 +1,45 @@
+# SOPS (Secrets OPerationS) - Git 기반 암호화
+# SOPS는 Helm 차트가 아닌 바이너리 도구입니다.
+# 이 파일은 SOPS 사용을 위한 설정 가이드입니다.
+
+# SOPS 설치 (macOS)
+# brew install sops
+
+# SOPS 설정 파일 (.sops.yaml)
+# 프로젝트 루트에 생성 필요
+
+sops_config:
+  # GPG 키 기반 암호화 (권장)
+  creation_rules:
+    - path_regex: "secrets.*\\.yaml$"
+      pgp: "your-gpg-key-fingerprint"
+      
+    # 또는 Age 키 기반 (간단함)
+    - path_regex: "secrets.*\\.yaml$"  
+      age: "age1ql3z7hjy54pw9hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p"
+
+# 사용 예시:
+# 1. GPG 키 생성
+#    gpg --gen-key
+#    gpg --list-secret-keys --keyid-format LONG
+
+# 2. 비밀 파일 암호화
+#    sops -e -i secrets/database-secrets.yaml
+
+# 3. 비밀 파일 복호화 
+#    sops -d secrets/database-secrets.yaml
+
+# 4. kubectl과 함께 사용
+#    sops -d secrets/database-secrets.yaml | kubectl apply -f -
+
+# Kubernetes Secret 예시 (암호화 전)
+example_secret:
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: database-secret
+    namespace: default
+  type: Opaque
+  data:
+    username: YWRtaW4=  # base64 encoded
+    password: MWYyZDFlMmU2N2Rm  # base64 encoded
