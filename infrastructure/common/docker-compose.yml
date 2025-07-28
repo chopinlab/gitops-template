@@ -1,0 +1,74 @@
+services:
+  traefik:
+    image: traefik:v3.4.3
+    container_name: traefik
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.file.filename=/certs/traefik-config.yml
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --log.level=DEBUG
+      - --accesslog=true
+      - --accesslog.format=json
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config:/certs
+    networks:
+      - traefik
+      
+  registry:
+    image: registry:2
+    container_name: registry
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+    volumes:
+      - ./registry-data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.registry.rule=Host(`registry.chopinsmith.com`)"
+      - "traefik.http.routers.registry.entrypoints=web,websecure"
+      - "traefik.http.routers.registry.tls=true"
+      - "traefik.http.services.registry.loadbalancer.server.port=5000"
+      - "traefik.http.services.registry.loadbalancer.server.scheme=http"
+    networks:
+      - traefik
+      
+  wireguard:
+    image: ghcr.io/wg-easy/wg-easy
+    container_name: wireguard
+    network_mode: host  # Host 모드
+    environment:
+      - WG_HOST=chopinsmith.duckdns.org  # 외부 도메인
+      - PASSWORD_HASH=$$2a$$12$$S9AThUWf3C82A3EKBLAlYOG.9vcVxUPHmJwj082kkMcbEJSAjCfmO
+      - WG_PORT=51820
+      - WG_DEFAULT_ADDRESS=10.8.0.x
+      - WG_DEFAULT_DNS=1.1.1.1,8.8.8.8
+      - WG_MTU=1420
+      - WG_ALLOWED_IPS=192.168.0.1/24,10.8.0.1/24
+      # 추가 설정
+      - WG_PERSISTENT_KEEPALIVE=25
+      - WG_PRE_UP=echo "WireGuard 시작됨"
+      - WG_POST_UP=iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o $$(ip route | grep default | awk '{print $$5}') -j MASQUERADE
+      - WG_PRE_DOWN=echo "WireGuard 종료됨"
+      - WG_POST_DOWN=iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o $$(ip route | grep default | awk '{print $$5}') -j MASQUERADE
+    labels:
+      - "traefik.enable=false"  
+    volumes:
+      - ./wireguard-data:/etc/wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    restart: unless-stopped
+
+networks:
+  traefik:
+    driver: bridge
