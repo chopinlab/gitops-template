@@ -10,9 +10,9 @@ This is a GitOps repository template for managing deployments of microservice ap
 
 ### Directory Structure
 - `infrastructure/argocd/` - ArgoCD application definitions
-- `projects/` - Individual project configurations with Kubernetes and Docker Compose files
+- `infrastructure/local/` - Docker Compose configurations for local development
+- `projects/` - Individual project configurations with Kubernetes manifests
   - Each project follows a consistent structure with `kubernetes/base/` and `kubernetes/overlays/` directories
-  - Docker Compose files for local development and deployment
 
 ### GitOps Workflow
 - ArgoCD monitors this repository and automatically syncs changes to Kubernetes clusters
@@ -28,8 +28,8 @@ This is a GitOps repository template for managing deployments of microservice ap
 
 ### Docker Compose (Local Development)
 ```bash
-# Start application stack
-cd projects/app-common
+# Start full application stack (recommended for development)
+cd infrastructure/local
 docker-compose up -d
 
 # Start individual backend service
