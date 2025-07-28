@@ -146,3 +146,46 @@ exec "$SHELL"
 # 또는 시스템 재부팅
 sudo reboot
 ```
+
+## K3s Traefik 비활성화 (선택사항)
+
+K3s는 기본적으로 내장 Traefik을 설치하여 80, 443 포트를 사용합니다. Docker Compose로 별도 Traefik을 사용하려면 내장 Traefik을 비활성화해야 합니다.
+
+### 방법 1: systemd 서비스 설정 수정
+
+```bash
+# K3s 중지
+sudo systemctl stop k3s
+
+# systemd 오버라이드 파일 생성
+sudo systemctl edit k3s
+
+# 다음 내용을 추가:
+[Service]
+ExecStart=
+ExecStart=/usr/local/bin/k3s server --disable traefik
+
+# 저장 후 재시작
+sudo systemctl daemon-reload
+sudo systemctl start k3s
+```
+
+### 방법 2: 설정 파일 수정
+
+```bash
+# K3s 설정 파일에 Traefik 비활성화 옵션 추가
+echo '--disable traefik' | sudo tee -a /etc/rancher/k3s/config.yaml
+
+# K3s 재시작
+sudo systemctl restart k3s
+```
+
+### 확인
+
+```bash
+# K3s 상태 확인
+sudo systemctl status k3s
+
+# Traefik 파드가 없는지 확인
+kubectl get pods -n kube-system | grep traefik
+```

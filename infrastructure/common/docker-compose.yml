@@ -69,6 +69,41 @@ services:
       - SYS_MODULE
     restart: unless-stopped
 
+  # TimescaleDB (PostgreSQL + 시계열 확장)
+  timescaledb:
+    image: timescale/timescaledb:${TIMESCALEDB_VERSION}
+    container_name: timescaledb
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # TimescaleDB 최적화 설정
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      TS_TUNE_MEMORY: ${TS_TUNE_MEMORY}
+      TS_TUNE_NUM_CPUS: ${TS_TUNE_NUM_CPUS}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - ./timescaledb-data:/var/lib/postgresql/data
+      # TimescaleDB 초기화 스크립트 (있으면 실행)
+      # - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    command: >
+      postgres
+      -c shared_preload_libraries=timescaledb
+      -c max_connections=${POSTGRES_MAX_CONNECTIONS}
+      -c shared_buffers=${POSTGRES_SHARED_BUFFERS}
+      -c effective_cache_size=${POSTGRES_EFFECTIVE_CACHE_SIZE}
+      -c work_mem=${POSTGRES_WORK_MEM}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - traefik
+
+
 networks:
   traefik:
     driver: bridge

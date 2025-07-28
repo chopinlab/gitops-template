@@ -4,6 +4,7 @@
 # Data directories
 infrastructure/common/registry-data/
 infrastructure/common/wireguard-data/
+infrastructure/common/timescaledb-data/
 
 # OS generated files
 .DS_Store
