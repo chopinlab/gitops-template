@@ -21,6 +21,8 @@ helm/
 | 컴포넌트 | 차트 | 용도 | 리소스 |
 |----------|------|------|--------|
 | VictoriaMetrics | vm/victoria-metrics-single | 메트릭 저장 (Prometheus 대체) | ~100MB |
+| VMAgent | vm/victoria-metrics-agent | 메트릭 수집 (Prometheus Agent 대체) | ~50MB |
+| Node Exporter | prometheus-community/prometheus-node-exporter | 시스템 메트릭 수집 | ~30MB |
 | VictoriaLogs | vm/victoria-logs-single | 로그 저장 (Loki 대체) | ~100MB |
 | Tempo | grafana/tempo | 분산 트레이싱 | ~100MB |
 | Grafana | grafana/grafana | 통합 대시보드 | ~200MB |
@@ -38,6 +40,7 @@ EXTERNAL_IP=192.168.1.100 ./infrastructure/helm/install-scripts/install-monitori
 # 1. Helm 레포지토리 추가
 helm repo add vm https://victoriametrics.github.io/helm-charts/
 helm repo add grafana https://grafana.github.io/helm-charts/
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts/
 helm repo update
 
 # 2. 네임스페이스 생성
@@ -47,15 +50,27 @@ kubectl create namespace monitoring
 export EXTERNAL_IP=192.168.1.100  # 실제 서버 IP로 변경
 
 # 4. 개별 설치 (환경변수 치환)
+# Victoria Metrics (메트릭 저장소)
 envsubst < infrastructure/helm/charts/victoria-metrics/values-dev.yaml | \
 helm install victoria-metrics vm/victoria-metrics-single -f - -n monitoring
 
+# Node Exporter (시스템 메트릭)
+envsubst < infrastructure/helm/charts/node-exporter/values-dev.yaml | \
+helm install node-exporter prometheus-community/prometheus-node-exporter -f - -n monitoring
+
+# VMAgent (메트릭 수집)
+envsubst < infrastructure/helm/charts/vmagent/values-dev.yaml | \
+helm install vmagent vm/victoria-metrics-agent -f - -n monitoring
+
+# Victoria Logs (로그 저장소)
 envsubst < infrastructure/helm/charts/victoria-logs/values-dev.yaml | \
 helm install vlogs vm/victoria-logs-single -f - -n monitoring
 
+# Tempo (분산 트레이싱)
 envsubst < infrastructure/helm/charts/tempo/values-dev.yaml | \
 helm install tempo grafana/tempo -f - -n monitoring
 
+# Grafana (대시보드)
 envsubst < infrastructure/helm/charts/grafana/values-dev.yaml | \
 helm install grafana grafana/grafana -f - -n monitoring
 ```

@@ -42,6 +42,7 @@ log_info "모니터링 스택 설치 시작..."
 log_info "Helm 레포지토리 추가 중..."
 helm repo add vm https://victoriametrics.github.io/helm-charts/
 helm repo add grafana https://grafana.github.io/helm-charts/
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts/
 helm repo update
 
 # 네임스페이스 생성
@@ -57,19 +58,31 @@ envsubst < "$HELM_DIR/charts/victoria-metrics/values-dev.yaml" | \
 helm upgrade --install victoria-metrics vm/victoria-metrics-single \
     -f - -n monitoring
 
-# 2. VictoriaLogs 설치  
+# 2. Node Exporter 설치 (시스템 메트릭)
+log_info "Node Exporter 설치 중..."
+envsubst < "$HELM_DIR/charts/node-exporter/values-dev.yaml" | \
+helm upgrade --install node-exporter prometheus-community/prometheus-node-exporter \
+    -f - -n monitoring
+
+# 3. VMAgent 설치 (메트릭 수집)
+log_info "VMAgent 설치 중..."
+envsubst < "$HELM_DIR/charts/vmagent/values-dev.yaml" | \
+helm upgrade --install vmagent vm/victoria-metrics-agent \
+    -f - -n monitoring
+
+# 4. VictoriaLogs 설치  
 log_info "VictoriaLogs 설치 중..."
 envsubst < "$HELM_DIR/charts/victoria-logs/values-dev.yaml" | \
 helm upgrade --install vlogs vm/victoria-logs-single \
     -f - -n monitoring
 
-# 3. Tempo 설치
+# 5. Tempo 설치
 log_info "Tempo 설치 중..."
 envsubst < "$HELM_DIR/charts/tempo/values-dev.yaml" | \
 helm upgrade --install tempo grafana/tempo \
     -f - -n monitoring
 
-# 4. Grafana 설치
+# 6. Grafana 설치
 log_info "Grafana 설치 중..."
 envsubst < "$HELM_DIR/charts/grafana/values-dev.yaml" | \
 helm upgrade --install grafana grafana/grafana \

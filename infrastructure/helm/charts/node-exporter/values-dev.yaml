@@ -1,0 +1,57 @@
+# Node Exporter - 시스템 메트릭 수집
+# 차트: prometheus-community/prometheus-node-exporter
+
+# 모든 노드에 DaemonSet으로 배포
+hostNetwork: true
+hostPID: true
+hostRootFSMount:
+  enabled: true
+  mountPropagation: HostToContainer
+
+# 리소스 설정
+resources:
+  requests:
+    memory: "30Mi"
+    cpu: "10m"
+  limits:
+    memory: "50Mi"
+    cpu: "50m"
+
+# 수집할 메트릭 설정
+extraArgs:
+  - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+  - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+  - --collector.netdev.device-exclude=^(veth.*|docker.*|br-.*|lo)$
+  - --collector.diskstats.ignored-devices=^(ram|loop|fd|(h|s|v|xv)d[a-z]|nvme\\d+n\\d+p)\\d+$
+
+# 서비스 설정
+service:
+  type: ClusterIP
+  port: 9100
+  targetPort: 9100
+  # Prometheus 스크래핑을 위한 어노테이션
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9100"
+    prometheus.io/path: "/metrics"
+
+# 보안 설정
+securityContext:
+  fsGroup: 65534
+  runAsGroup: 65534
+  runAsNonRoot: true
+  runAsUser: 65534
+
+# 노드 선택자 (필요시)
+nodeSelector: {}
+
+# 톨러레이션 (마스터 노드 포함)
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+
+# Pod 어노테이션
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9100"
+  prometheus.io/path: "/metrics"
