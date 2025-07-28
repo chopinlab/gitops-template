@@ -120,9 +120,14 @@ sudo systemctl enable docker
 
 경량화된 Kubernetes 배포판인 K3s를 설치합니다.
 
+### 기본 설치 (원격 접근 포함)
+
 ```bash
-# K3s 설치
-curl -sfL https://get.k3s.io | sh -
+# K3s 설치 (TLS SAN 포함하여 원격 접근 가능하도록 설정)
+curl -sfL https://get.k3s.io | sh -s - \
+  --tls-san 192.168.1.100 \
+  --tls-san your-server.example.com \
+  --disable traefik
 
 # kubectl 설정
 mkdir -p ~/.kube
@@ -133,6 +138,59 @@ chmod 600 ~/.kube/config
 # 환경 변수 설정
 echo 'export KUBECONFIG=~/.kube/config' >> ~/.zshrc
 source ~/.zshrc
+```
+
+**중요:** `--tls-san` 옵션에 실제 서버 IP와 도메인을 입력하세요. 이는 원격에서 kubectl 접근 시 인증서 검증을 위해 필요합니다.
+
+### K3s 재설치 (TLS SAN 추가가 필요한 경우)
+
+이미 K3s를 설치했지만 원격 접근을 위해 TLS SAN을 추가해야 하는 경우:
+
+```bash
+# K3s 완전 삭제
+sudo /usr/local/bin/k3s-uninstall.sh
+
+# 남은 파일들 정리 (필요시)
+sudo rm -rf /var/lib/rancher/k3s
+sudo rm -rf /etc/rancher/k3s
+
+# TLS SAN 포함하여 재설치
+curl -sfL https://get.k3s.io | sh -s - \
+  --tls-san 192.168.1.100 \
+  --tls-san your-server.example.com \
+  --disable traefik
+
+# kubectl 설정
+mkdir -p ~/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+sudo chown $USER:$USER ~/.kube/config
+chmod 600 ~/.kube/config
+```
+
+### 원격 클라이언트 설정 (맥북 등)
+
+1. 서버에서 kubeconfig 파일 내용 복사:
+```bash
+cat ~/.kube/config
+```
+
+2. 클라이언트 (맥북)에서 설정:
+```bash
+# kubectl 설치 (macOS)
+brew install kubectl
+
+# kubeconfig 디렉토리 생성
+mkdir -p ~/.kube
+
+# 서버에서 복사한 내용을 ~/.kube/config에 저장
+# server 주소를 localhost에서 실제 서버 주소로 변경
+# server: https://127.0.0.1:6443
+# ↓
+# server: https://192.168.1.100:6443 (또는 도메인)
+
+# 연결 테스트
+kubectl cluster-info
+kubectl get nodes
 ```
 
 ## 설치 완료 후
@@ -147,39 +205,6 @@ exec "$SHELL"
 sudo reboot
 ```
 
-## K3s Traefik 비활성화 (선택사항)
-
-K3s는 기본적으로 내장 Traefik을 설치하여 80, 443 포트를 사용합니다. Docker Compose로 별도 Traefik을 사용하려면 내장 Traefik을 비활성화해야 합니다.
-
-### 방법 1: systemd 서비스 설정 수정
-
-```bash
-# K3s 중지
-sudo systemctl stop k3s
-
-# systemd 오버라이드 파일 생성
-sudo systemctl edit k3s
-
-# 다음 내용을 추가:
-[Service]
-ExecStart=
-ExecStart=/usr/local/bin/k3s server --disable traefik
-
-# 저장 후 재시작
-sudo systemctl daemon-reload
-sudo systemctl start k3s
-```
-
-### 방법 2: 설정 파일 수정
-
-```bash
-# K3s 설정 파일에 Traefik 비활성화 옵션 추가
-echo '--disable traefik' | sudo tee -a /etc/rancher/k3s/config.yaml
-
-# K3s 재시작
-sudo systemctl restart k3s
-```
-
 ### 확인
 
 ```bash
@@ -188,4 +213,10 @@ sudo systemctl status k3s
 
 # Traefik 파드가 없는지 확인
 kubectl get pods -n kube-system | grep traefik
+
+
 ```
+
+
+
+
