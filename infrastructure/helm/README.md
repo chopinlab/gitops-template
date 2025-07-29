@@ -54,6 +54,9 @@ export EXTERNAL_IP=192.168.1.100  # 실제 서버 IP로 변경
 envsubst < infrastructure/helm/charts/victoria-metrics/values-dev.yaml | \
 helm install victoria-metrics vm/victoria-metrics-single -f - -n monitoring
 
+envsubst < infrastructure/helm/charts/victoria-metrics/values-dev.yaml | \
+helm install vm vm/victoria-metrics-single -f - -n monitoring
+
 # Node Exporter (시스템 메트릭)
 envsubst < infrastructure/helm/charts/node-exporter/values-dev.yaml | \
 helm install node-exporter prometheus-community/prometheus-node-exporter -f - -n monitoring

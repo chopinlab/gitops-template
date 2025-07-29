@@ -11,8 +11,8 @@ resources:
     cpu: "200m"
 
 # 메트릭 전송 대상 (Victoria Metrics)
-remoteWriteUrls:
-  - http://victoria-metrics-single-server.monitoring.svc.cluster.local:8428/api/v1/write
+remoteWrite:
+  - url: http://victoria-metrics-server.monitoring.svc.cluster.local:8428/api/v1/write
 
 # 스크래핑 설정
 config:
@@ -85,6 +85,9 @@ config:
       kubernetes_sd_configs:
         - role: service
       relabel_configs:
+        - source_labels: [__meta_kubernetes_service_name]
+          action: drop
+          regex: kube-dns
         - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
           action: keep
           regex: true

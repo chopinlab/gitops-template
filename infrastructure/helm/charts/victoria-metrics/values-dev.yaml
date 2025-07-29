@@ -1,6 +1,8 @@
 # VictoriaMetrics Single - Prometheus 대체 (경량화)
 # 차트: vm/victoria-metrics-single
 
+fullnameOverride: "victoria-metrics"
+
 # 리소스 설정
 server:
   # 스토리지 설정
