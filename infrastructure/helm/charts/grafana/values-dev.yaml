@@ -1,100 +1,111 @@
 # Grafana - 통합 대시보드
 # 차트: grafana/grafana
 
-grafana:
-  # 관리자 설정
-  adminUser: admin
-  adminPassword: admin123  # 프로덕션에서는 변경 필요
-  
-  # 리소스 설정
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m" 
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
-  
-  # 스토리지 설정 (대시보드 저장용)
-  persistence:
-    enabled: true
-    size: 10Gi
-    storageClassName: ""  # 기본 스토리지 클래스 사용
-    
-  # 서비스 설정 (externalIPs 사용)
-  service:
-    type: ClusterIP
-    port: 80
-    externalIPs:
-      - ${EXTERNAL_IP}  # 실제 서버 IP로 변경 필요
-    
-  # Ingress 설정 (필요시 활성화)
-  ingress:
-    enabled: false
-    # enabled: true
-    # hosts:
-    #   - grafana.local
-    
-  # 데이터소스 자동 설정
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-        # VictoriaMetrics (메트릭)
-        - name: VictoriaMetrics
-          type: prometheus
-          url: http://victoria-metrics-single:8428
-          access: proxy
-          isDefault: true
-          
-        # VictoriaLogs (로그) 
-        - name: VictoriaLogs
-          type: loki
-          url: http://victoria-logs-single:9428
-          access: proxy
-          
-        # Tempo (트레이싱)
-        - name: Tempo
-          type: tempo
-          url: http://tempo:3100
-          access: proxy
-          
-  # 대시보드 자동 import
-  dashboardProviders:
-    dashboardproviders.yaml:
-      apiVersion: 1
-      providers:
-        - name: 'default'
-          orgId: 1
-          folder: ''
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/default
-            
-  # 기본 대시보드들
-  dashboards:
-    default:
-      # Kubernetes 클러스터 모니터링
-      kubernetes-cluster:
-        gnetId: 7249
-        revision: 1
-        datasource: VictoriaMetrics
+# 관리자 설정
+adminUser: admin
+adminPassword: admin  # 프로덕션에서는 변경 필요
+
+
+# Administrator credentials when not using an existing secret (see below)
+# adminUser: admin
+# adminPassword: strongpassword
+
+# Use an existing secret for the admin user.
+admin:
+  ## Name of the secret. Can be templated.
+  existingSecret: ""
+  userKey: admin
+  passwordKey: admin
+
+# 리소스 설정
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m" 
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+# 스토리지 설정 (대시보드 저장용)
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: ""  # 기본 스토리지 클래스 사용
+
+# 서비스 설정 (externalIPs 사용)  
+service:
+  type: ClusterIP
+  port: 9090
+  externalIPs:
+    - 192.168.0.10  # 실제 서버 IP로 변경 필요
+
+# Ingress 설정 (필요시 활성화)
+ingress:
+  enabled: false
+  # enabled: true
+  # hosts:
+  #   - grafana.local
+
+# 데이터소스 자동 설정
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      # VictoriaMetrics (메트릭)
+      - name: VictoriaMetrics
+        type: prometheus
+        url: http://victoria-metrics-server:8428
+        access: proxy
+        isDefault: true
         
-      # Node Exporter 메트릭
-      node-exporter:
-        gnetId: 1860
-        revision: 27
-        datasource: VictoriaMetrics
+      # VictoriaLogs (로그) 
+      # - name: VictoriaLogs
+      #   type: loki
+      #   url: http://victoria-logs-single:9428
+      #   access: proxy
         
-  # 플러그인 설치
-  plugins:
-    - grafana-piechart-panel
-    - grafana-worldmap-panel
-    
-  # 환경변수
-  env:
-    GF_SECURITY_ADMIN_PASSWORD: admin123
-    GF_USERS_ALLOW_SIGN_UP: "false"
-    GF_INSTALL_PLUGINS: "grafana-piechart-panel,grafana-worldmap-panel"
+      # Tempo (트레이싱)
+      # - name: Tempo
+      #   type: tempo
+      #   url: http://tempo:3100
+      #   access: proxy
+        
+# 대시보드 자동 import
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+          
+# 기본 대시보드들
+dashboards:
+  default:
+    # Kubernetes 클러스터 모니터링
+    kubernetes-cluster:
+      gnetId: 7249
+      revision: 1
+      datasource: VictoriaMetrics
+      
+    # Node Exporter 메트릭
+    node-exporter:
+      gnetId: 1860
+      revision: 27
+      datasource: VictoriaMetrics
+      
+# 플러그인 설치
+plugins:
+  - grafana-piechart-panel
+  - grafana-worldmap-panel
+  
+# 환경변수
+env:
+  GF_SECURITY_ADMIN_PASSWORD: admin
+  GF_USERS_ALLOW_SIGN_UP: "false"
+  GF_INSTALL_PLUGINS: "grafana-piechart-panel,grafana-worldmap-panel"

@@ -49,7 +49,14 @@ kubectl create namespace monitoring
 # 3. 환경변수 설정
 export EXTERNAL_IP=192.168.1.100  # 실제 서버 IP로 변경
 
-# 4. 개별 설치 (환경변수 치환)
+# 4. values.yaml 파일 뽑아서 포멧 확인하기
+helm show values vm/victoria-metrics-single > values.yaml
+
+## Grafana 차트의 기본 values 파일로 저장  
+helm show values grafana/grafana > grafana-values.yaml
+
+
+# 5. 개별 설치 (환경변수 치환)
 # Victoria Metrics (메트릭 저장소)
 envsubst < infrastructure/helm/charts/victoria-metrics/values-dev.yaml | \
 helm install victoria-metrics vm/victoria-metrics-single -f - -n monitoring
