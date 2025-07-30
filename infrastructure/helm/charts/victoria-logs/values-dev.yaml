@@ -45,17 +45,3 @@ victoria-logs-single:
       - name: VL_logLevel
         value: "INFO"
         
-  # Fluent Bit 설정 (로그 수집기)
-  fluent-bit:
-    enabled: true
-    config:
-      outputs: |
-        [OUTPUT]
-            Name http
-            Match *
-            Host victoria-logs-single
-            Port 9428
-            URI /insert/jsonline
-            Format json_lines
-            Json_date_key _time
-            Json_date_format iso8601

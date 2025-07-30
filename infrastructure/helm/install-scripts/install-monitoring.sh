@@ -64,10 +64,10 @@ envsubst < "$HELM_DIR/charts/node-exporter/values-dev.yaml" | \
 helm upgrade --install node-exporter prometheus-community/prometheus-node-exporter \
     -f - -n monitoring
 
-# 3. VMAgent 설치 (메트릭 수집)
-log_info "VMAgent 설치 중..."
-envsubst < "$HELM_DIR/charts/vmagent/values-dev.yaml" | \
-helm upgrade --install vmagent vm/victoria-metrics-agent \
+# 3. VLAgent 설치 (로그 수집)
+log_info "VLAgent 설치 중..."
+envsubst < "$HELM_DIR/charts/vlagent/values-dev.yaml" | \
+helm upgrade --install vlagent vm/victoria-logs-agent \
     -f - -n monitoring
 
 # 4. VictoriaLogs 설치  
