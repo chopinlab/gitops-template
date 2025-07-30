@@ -1,0 +1,52 @@
+apiVersion: v2
+name: monitoring-stack
+description: 모니터링 스택 (VictoriaMetrics, VictoriaLogs, VMAgent, Grafana)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+home: https://github.com/VictoriaMetrics/VictoriaMetrics
+sources:
+  - https://github.com/VictoriaMetrics/VictoriaMetrics
+  - https://github.com/VictoriaMetrics/helm-charts
+maintainers:
+  - name: monitoring-team
+    email: monitoring@example.com
+
+keywords:
+  - monitoring
+  - metrics
+  - logs
+  - observability
+  - victoria-metrics
+  - victoria-logs
+
+dependencies:
+  - name: victoria-metrics-single
+    version: "0.9.*"
+    repository: https://victoriametrics.github.io/helm-charts/
+    condition: victoria-metrics.enabled
+    
+  - name: victoria-logs-agent
+    version: "0.5.*"
+    repository: https://victoriametrics.github.io/helm-charts/
+    condition: vlagent.enabled
+    
+  - name: victoria-logs-single
+    version: "0.5.*"
+    repository: https://victoriametrics.github.io/helm-charts/
+    condition: victoria-logs.enabled
+    
+  - name: grafana
+    version: "7.0.*"
+    repository: https://grafana.github.io/helm-charts/
+    condition: grafana.enabled
+    
+  - name: tempo
+    version: "1.7.*"
+    repository: https://grafana.github.io/helm-charts/
+    condition: tempo.enabled
+    
+  - name: prometheus-node-exporter
+    version: "4.24.*"
+    repository: https://prometheus-community.github.io/helm-charts/
+    condition: node-exporter.enabled

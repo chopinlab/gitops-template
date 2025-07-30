@@ -1,0 +1,70 @@
+# VictoriaLogs - Loki 대체 (경량화)
+# 차트: vm/victoria-logs-single
+
+victoria-logs-single:
+  server:
+    # 스토리지 설정
+    persistentVolume:
+      enabled: true
+      size: 50Gi
+      storageClass: ""  # 기본 스토리지 클래스 사용
+      accessModes:
+        - ReadWriteOnce
+      
+    # 리소스 제한 (프로덕션)
+    resources:
+      requests:
+        memory: "500Mi"
+        cpu: "200m"
+      limits:
+        memory: "2Gi" 
+        cpu: "1000m"
+    
+    # 보존 기간 설정
+    retentionPeriod: "30d"
+    
+    # 서비스 설정
+    service:
+      type: ClusterIP
+      port: 9428
+      
+    # Ingress 설정 (필요시 활성화)
+    ingress:
+      enabled: false
+      # enabled: true
+      # ingressClassName: nginx
+      # hosts:
+      #   - host: victoria-logs.example.com
+      #     paths:
+      #       - path: /
+      #         pathType: Prefix
+      # tls:
+      #   - secretName: victoria-logs-tls
+      #     hosts:
+      #       - victoria-logs.example.com
+      
+    # 환경변수
+    env:
+      - name: VL_httpListenAddr
+        value: ":9428"
+      - name: VL_logLevel
+        value: "INFO"
+      - name: VL_retentionPeriod
+        value: "30d"
+      - name: VL_storage_path
+        value: "/victoria-logs-data"
+        
+    # 보안 컨텍스트
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      fsGroup: 2000
+      
+    # 노드 셀렉터 (필요시)
+    nodeSelector: {}
+    
+    # Tolerations (필요시)
+    tolerations: []
+    
+    # Affinity (필요시)
+    affinity: {}

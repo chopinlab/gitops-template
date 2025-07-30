@@ -1,0 +1,45 @@
+# 통합 모니터링 스택 설정
+# 개별 차트 활성화/비활성화
+
+# VictoriaMetrics (메트릭 저장소)
+victoria-metrics:
+  enabled: true
+
+# VLAgent (로그 수집기)  
+vlagent:
+  enabled: true
+
+# VictoriaLogs (로그 저장소)
+victoria-logs:
+  enabled: true
+
+# Grafana (대시보드)
+grafana:
+  enabled: true
+
+# Tempo (분산 추적)
+tempo:
+  enabled: true
+
+# Node Exporter (시스템 메트릭)
+node-exporter:
+  enabled: true
+
+# 글로벌 설정
+global:
+  # 스토리지 클래스
+  storageClass: ""
+  
+  # 네임스페이스
+  namespace: monitoring
+  
+  # 공통 라벨
+  labels:
+    environment: production
+    managed-by: helm
+    
+  # 보안 설정
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
