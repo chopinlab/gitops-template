@@ -26,10 +26,10 @@ dependencies:
     repository: https://victoriametrics.github.io/helm-charts/
     condition: victoria-metrics.enabled
     
-  - name: victoria-logs-agent
-    version: "0.5.*"
-    repository: https://victoriametrics.github.io/helm-charts/
-    condition: vlagent.enabled
+  - name: fluent-bit
+    version: "0.43.*"
+    repository: https://fluent.github.io/helm-charts/
+    condition: fluent-bit.enabled
     
   - name: victoria-logs-single
     version: "0.5.*"

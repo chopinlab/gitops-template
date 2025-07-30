@@ -5,8 +5,8 @@
 victoria-metrics:
   enabled: true
 
-# VLAgent (로그 수집기)  
-vlagent:
+# Fluent Bit (로그 수집기)  
+fluent-bit:
   enabled: true
 
 # VictoriaLogs (로그 저장소)

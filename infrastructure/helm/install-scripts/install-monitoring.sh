@@ -43,6 +43,7 @@ log_info "Helm 레포지토리 추가 중..."
 helm repo add vm https://victoriametrics.github.io/helm-charts/
 helm repo add grafana https://grafana.github.io/helm-charts/
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts/
+helm repo add fluent https://fluent.github.io/helm-charts/
 helm repo update
 
 # 네임스페이스 생성
@@ -64,10 +65,10 @@ envsubst < "$HELM_DIR/charts/node-exporter/values-dev.yaml" | \
 helm upgrade --install node-exporter prometheus-community/prometheus-node-exporter \
     -f - -n monitoring
 
-# 3. VLAgent 설치 (로그 수집)
-log_info "VLAgent 설치 중..."
-envsubst < "$HELM_DIR/charts/vlagent/values-dev.yaml" | \
-helm upgrade --install vlagent vm/victoria-logs-agent \
+# 3. Fluent Bit 설치 (로그 수집)
+log_info "Fluent Bit 설치 중..."
+envsubst < "$HELM_DIR/charts/fluent-bit/values-dev.yaml" | \
+helm upgrade --install fluent-bit fluent/fluent-bit \
     -f - -n monitoring
 
 # 4. VictoriaLogs 설치  

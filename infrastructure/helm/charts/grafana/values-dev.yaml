@@ -60,8 +60,9 @@ datasources:
         
       # VictoriaLogs (로그) 
       # - name: VictoriaLogs
+      #   # type: victoriametrics-logs-datasource
       #   type: loki
-      #   url: http://victoria-logs-single:9428
+      #   url: http://victoria-logs-server:9428
       #   access: proxy
         
       # Tempo (트레이싱)

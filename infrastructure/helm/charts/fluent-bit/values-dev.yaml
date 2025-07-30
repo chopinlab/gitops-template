@@ -1,0 +1,103 @@
+# Fluent Bit - 로그 수집 에이전트 (개발환경)
+# 차트: fluent/fluent-bit
+
+# DaemonSet으로 모든 노드에 배포
+kind: DaemonSet
+
+# 리소스 설정 (개발환경)
+resources:
+  requests:
+    memory: "32Mi"
+    cpu: "25m"
+  limits:
+    memory: "64Mi"
+    cpu: "100m"
+
+# Fluent Bit 설정 (간소화)
+config:
+  service: |
+    [SERVICE]
+        Daemon Off
+        Flush 1
+        Log_Level info
+        HTTP_Server On
+        HTTP_Listen 0.0.0.0
+        HTTP_Port 2020
+        Health_Check On
+        
+  inputs: |
+    [INPUT]
+        Name tail
+        Path /var/log/containers/*.log
+        Tag kube.*
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines On
+        
+  filters: |
+    [FILTER]
+        Name kubernetes
+        Match kube.*
+        Kube_URL https://kubernetes.default.svc:443
+        Kube_CA_File /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File /var/run/secrets/kubernetes.io/serviceaccount/token
+        Merge_Log On
+        K8S-Logging.Parser On
+        K8S-Logging.Exclude Off
+        Labels On
+        
+    [FILTER]
+        Name modify
+        Match kube.*
+        Rename log _msg
+        Rename message _msg
+        
+    [FILTER]
+        Name grep
+        Match kube.*
+        Exclude kubernetes_namespace_name kube-system
+        Exclude kubernetes_namespace_name kube-public
+        
+  outputs: |
+    [OUTPUT]
+        Name http
+        Match kube.*
+        Host victoria-logs-server.monitoring.svc.cluster.local
+        Port 9428
+        URI /insert/jsonline
+        Format json_lines
+        Retry_Limit 2
+
+# 볼륨 마운트
+volumeMounts:
+  - name: varlog
+    mountPath: /var/log
+    readOnly: true
+  - name: varlibdockercontainers
+    mountPath: /var/lib/docker/containers
+    readOnly: true
+    
+volumes:
+  - name: varlog
+    hostPath:
+      path: /var/log
+  - name: varlibdockercontainers
+    hostPath:
+      path: /var/lib/docker/containers
+
+# ServiceAccount 설정
+serviceAccount:
+  create: true
+  
+# RBAC 설정
+rbac:
+  create: true
+  
+# 보안 컨텍스트
+securityContext:
+  privileged: true
+  runAsUser: 0
+
+# Tolerations
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
